@@ -2,15 +2,11 @@
 node_modules
 /dist
 
-#Npm
-package-lock.json
-
-#Config axios
-# /src/libs/axios.js
-
 # local env files
 .env.local
 .env.*.local
+
+config.js
 
 # Log files
 npm-debug.log*
@@ -19,18 +15,9 @@ yarn-error.log*
 
 # Editor directories and files
 .idea
-.vscode/*
+.vscode
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
-
-!.vscode/*.code-snippets
-
-# script
-/vuexy-scripts
-
-# Docs
-/docs/.temp
-# src/libs/axios.js
+*.sw*

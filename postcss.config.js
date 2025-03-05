@@ -1,5 +1,8 @@
-const rtl = require('postcss-rtl')
+var tailwindcss = require('tailwindcss');
 
-module.exports = {
-  plugins: [rtl()],
+module.exports= {
+  plugins: [
+      tailwindcss('tailwind.js'),
+      require('autoprefixer'),
+  ]
 }

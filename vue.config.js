@@ -1,49 +1,13 @@
-const path = require('path')
+/*=========================================================================================
+  File Name: vue.config.js
+  Description: configuration file of vue
+  ----------------------------------------------------------------------------------------
+  Item Name: Vuesax Admin - Clean Vue.js Dashboard Admin Template
+  Author: Pixinvent
+  Author URL: http://www.themeforest.net/user/pixinvent
+==========================================================================================*/
+
 
 module.exports = {
-  publicPath: '/',
-  lintOnSave: false,
-  css: {
-    loaderOptions: {
-      sass: {
-        sassOptions: {
-          includePaths: ['./node_modules', './src/assets'],
-        },
-      },
-    },
-  },
-  configureWebpack: {
-    resolve: {
-      alias: {
-        '@themeConfig': path.resolve(__dirname, 'themeConfig.js'),
-        '@core': path.resolve(__dirname, 'src/@core'),
-        '@validations': path.resolve(__dirname, 'src/@core/utils/validations/validations.js'),
-        '@config': path.resolve(__dirname, 'src/@core/config/config.js'),
-        '@axios': path.resolve(__dirname, 'src/libs/axios'),
-      },
-    },
-  },
-  chainWebpack: config => {
-    config.module
-      .rule('vue')
-      .use('vue-loader')
-      .loader('vue-loader')
-      .tap(options => {
-        // eslint-disable-next-line no-param-reassign
-        options.transformAssetUrls = {
-          img: 'src',
-          image: 'xlink:href',
-          'b-avatar': 'src',
-          'b-img': 'src',
-          'b-img-lazy': ['src', 'blank-src'],
-          'b-card': 'img-src',
-          'b-card-img': 'src',
-          'b-card-img-lazy': ['src', 'blank-src'],
-          'b-carousel-slide': 'img-src',
-          'b-embed': 'src',
-        }
-        return options
-      })
-  },
-  transpileDependencies: ['vue-echarts', 'resize-detector'],
+  publicPath: '/'
 }
