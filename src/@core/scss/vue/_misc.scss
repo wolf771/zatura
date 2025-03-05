@@ -1,0 +1,70 @@
+// Apply BSV validation style to extensions
+.form-group {
+  &.is-invalid {
+    // Vue Select
+    .v-select {
+      .vs__dropdown-toggle {
+        border-color: $danger;
+      }
+    }
+
+    // Flatpickr
+    .flatpickr-input {
+      border-color: $danger;
+    }
+  }
+}
+
+// Fix Tooltip positioning issue
+// https://github.com/bootstrap-vue/bootstrap-vue/issues/1732
+// .fix-tooltip-position-top {
+.tooltip {
+  top: 0;
+}
+
+
+.form-completed-container{
+  text-align: center;
+  margin-top: 3rem;
+  img {
+      height: 400px;
+  }
+  h4 {
+      margin-top: 1rem;
+      font-weight: bold;
+  }
+}
+
+.custom-file-input {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+  &-label{
+    margin-top: 1rem;
+    cursor: pointer; // not necessary but probably a good idea.
+    display: inline-block; 
+    button{
+      pointer-events: none;
+    }
+  }
+}
+
+// .custom-file-input  + label {
+//   font-size: 1.25em;
+//   font-weight: 700;
+//   color: white;
+//   background-color: black;
+//   display: inline-block;
+// }
+
+// .custom-file-input :focus + label,
+// .custom-file-input  + label:hover {
+//   background-color: red;
+// }
+
+// .custom-file-input + label {
+// 	cursor: pointer; /* "hand" cursor */
+// }

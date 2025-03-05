@@ -1,0 +1,17 @@
+.new-client-sidebar{
+    
+    .b-sidebar{
+        width: 80% !important;
+    }
+}
+
+
+@media screen and (max-width: 768px) {
+    .new-client-sidebar{
+        .b-sidebar{
+            width: 100% !important;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+    }
+  }
