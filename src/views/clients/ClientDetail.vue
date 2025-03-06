@@ -639,6 +639,13 @@
                             <i class="fa fa-clone"></i>
                             Hacer recurrente
                           </el-dropdown-item>
+                          <el-dropdown-item
+                            :command="{ command: 'send-email', payload: { item: invoice } }"
+                            class="text-primary"
+                          >
+                            <i class="fa fa-envelope"></i>
+                            Enviar por correo
+                          </el-dropdown-item>
                         </el-dropdown-menu>
                       </el-dropdown>
                     </vs-td>
@@ -734,6 +741,14 @@
       :dataEmail="data_modal_remember_payment"
       :visible="show_modal_payment_remember"
     ></payment-remember-modal>
+    <send-email-modal
+    @emailSent="closeSendEmailModal"
+    :vis="show_send_email"
+    :dataEmail="dataModalSendEmail"
+    @closeModal="closeSendEmailModal"
+    :loading="emailSending"
+    :status="emailStatus"
+  ></send-email-modal>
   </div>
 </template>
 
@@ -747,6 +762,7 @@ import PaymentModal from "@/components/PaymentModal.vue";
 import PaymentRememberModal from "@/components/PaymentRememberModal.vue";
 import RegistersPerPage from "@/components/RegistersPerPage";
 import SearchFilter from "@/components/SearchFilter.vue";
+import SendEmailModal from "@/components/SendEmailModal.vue";
 
 import { mapState } from "vuex";
 import momentjs from "moment";
@@ -757,6 +773,7 @@ export default {
     CalcPrice,
     StatusPayment,
     StatusHacienda,
+    SendEmailModal,
     PaymentModal,
     PaymentRememberModal,
     RegistersPerPage,
@@ -766,6 +783,17 @@ export default {
     return {
       economic_activities: [],
       id: this.$route.params.id,
+      show_send_email: false,
+      emailSending: false,
+      emailStatus: '',
+      dataModalSendEmail: {
+        email: "",
+        subject: "",
+        body: "",
+        files: [],
+        type: "",
+        document: ""
+      },
       client: {
         economic_activity_id: "",
         name: "",
@@ -791,7 +819,6 @@ export default {
       invoices: [],
       tickets: [],
       payments: [],
-
       today: "",
       payment_modal_visible: false,
       show_modal_payment_remember: false,
@@ -841,7 +868,7 @@ export default {
       return this.$store.state.identification_types;
     },
     showProvinceCantonDistrict() {
-      return this.client.country.id !== 60 ? false : true;
+      return this.client.country.id === 60;
     }
   },
   methods: {
@@ -850,37 +877,41 @@ export default {
         expiration_date,
         "YYYY-MM-DD"
       );
-      if (expiration_date_format <= momentjs().format("YYYY-MM-DD")) {
-        return true;
-      } else {
-        return false;
-      }
+      return expiration_date_format <= momentjs().format("YYYY-MM-DD");
     },
-    updateItem(item) {
-      this.payment_modal_visible = false;
-      let i = this.invoices.find(i => i.id === item.paymentable_id);
-      let index = this.invoices.indexOf(i);
-      this.invoices[index].payment_amount =
-        this.invoices[index].payment_amount + parseFloat(item.amount);
-      this.invoices[index].due = item.due;
-      this.payment_modal_visible = false;
+    sendEmail(invoice) {
+      this.show_send_email = true;
+      this.dataModalSendEmail = {
+        email: this.client.email,
+        subject: `Factura #${invoice.reference}`,
+        body: `Estimado/a ${this.client.name}, adjunto a este correo encontrará la factura #${invoice.reference}.`,
+        files: [],
+        type: 'invoice',
+        document: invoice
+      };
     },
-    changeNumPerPage(num) {
-      let searchData = this.searchData;
-      searchData.perPage = num;
-      this.searchData = searchData;
-      this.getInvoices(1, this.searchData);
+    closeSendEmailModal() {
+      this.show_send_email = false;
     },
-    search(search) {
-      this.searchData = search;
-      this.searchData.perPage = this.perPage;
-      this.getInvoices(1, this.searchData);
-    },
-    goPage(page) {
-      this.getInvoices(page, this.searchData);
+    async sendEmailHandler() {
+      this.emailSending = true;
+      this.emailStatus = 'Conectando con servidor de correo...';
+
+      // Simular una llamada a la API de envío de correo
+      setTimeout(() => {
+        this.emailStatus = 'Enviando tu correo...';
+        setTimeout(() => {
+          this.emailStatus = 'Enviado';
+          this.emailSending = false;
+          this.closeSendEmailModal();
+        }, 2000);
+      }, 2000);
     },
     listAction(command) {
       switch (command.command) {
+        case "send-email":
+          this.sendEmail(command.payload.item);
+          break;
         case "pay":
           this.payment_modal_visible = true;
           this.data_modal_payment = command.payload;
@@ -923,14 +954,35 @@ export default {
             }
           });
           break;
-        //recordatorio de pago
         case "rp":
           this.show_modal_payment_remember = true;
           this.data_modal_remember_payment = command.payload;
           break;
       }
     },
-    closeModal(data) {
+    updateItem(item) {
+      this.payment_modal_visible = false;
+      let i = this.invoices.find(i => i.id === item.paymentable_id);
+      let index = this.invoices.indexOf(i);
+      this.invoices[index].payment_amount =
+        this.invoices[index].payment_amount + parseFloat(item.amount);
+      this.invoices[index].due = item.due;
+    },
+    changeNumPerPage(num) {
+      let searchData = this.searchData;
+      searchData.perPage = num;
+      this.searchData = searchData;
+      this.getInvoices(1, this.searchData);
+    },
+    search(search) {
+      this.searchData = search;
+      this.searchData.perPage = this.perPage;
+      this.getInvoices(1, this.searchData);
+    },
+    goPage(page) {
+      this.getInvoices(page, this.searchData);
+    },
+    closeModal() {
       this.payment_modal_visible = false;
       this.show_modal_payment_remember = false;
     },
@@ -939,7 +991,6 @@ export default {
         .getEconomicActivities()
         .then(res => {
           this.economic_activities = res.data;
-
           this.client.economic_activity = res.data.find(
             i => i.id == this.client.economic_activity_id
           );
@@ -973,7 +1024,6 @@ export default {
             province,
             country,
             quotations,
-            //invoices,
             tickets,
             balance,
             generic,
@@ -993,7 +1043,6 @@ export default {
           this.client.contacts =
             contacts.length > 0 ? contacts : [{ name: "", email: "" }];
           this.quotations = quotations;
-          //this.invoices = invoices;
           this.tickets = tickets;
           this.client.balance = balance;
           this.client.generic = generic;
@@ -1040,8 +1089,6 @@ export default {
           clientsService
             .updateClient(data)
             .then(function() {
-              //_this.$snotify.success('Cliente Actualizado Correctamente');
-              //JRA Cambio de notificacion por mensaje
               _this.$message({
                 showClose: true,
                 message: "Cliente Actualizado Correctamente",
@@ -1050,8 +1097,6 @@ export default {
               });
             })
             .catch(function(error) {
-              //_this.$snotify.error(error.response.data.message);
-              //JRA Cambio de notificacion por mensaje
               _this.$message({
                 showClose: true,
                 message: error.response.data.message,
@@ -1063,8 +1108,6 @@ export default {
     },
     addContact(newIndex) {
       if (this.client.contacts.length == 3) {
-        //this.$snotify.info(`No puede agregar mas de ${this.client.contacts.length} contactos`);
-        //JRA Cambio de notificacion por mensaje
         this.$message({
           showClose: true,
           message: `No puede agregar mas de ${this.client.contacts.length} contactos`,
