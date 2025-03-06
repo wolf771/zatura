@@ -190,7 +190,6 @@
                             <i class="fa fa-clone"></i>
                             Clonar
                           </el-dropdown-item>
-
                           <el-dropdown-item
                             :command="{
                               command: 'recurring',
@@ -200,6 +199,16 @@
                           >
                             <i class="fa fa-clone"></i>
                             Hacer recurrente
+                          </el-dropdown-item>
+                          <el-dropdown-item
+                            :command="{
+                              command: 'send-email',
+                              payload: { item: item }
+                            }"
+                            class="text-primary"
+                          >
+                            <i class="fa fa-envelope"></i>
+                            Enviar por correo
                           </el-dropdown-item>
                         </el-dropdown-menu>
                       </el-dropdown>
@@ -225,15 +234,23 @@
     </div>
     <payment-modal
       @paymentExecuted="updateItem"
-      @closeModal="closeModal()"
+      @closeModal="closeModal"
       :data="data_modal"
       :vis="payment_modal_visible"
     ></payment-modal>
     <payment-remember-modal
-      @closeModal="closeModal()"
+      @closeModal="closeModal"
       :dataEmail="data_modal"
       :visible="show_modal_payment_remember"
     ></payment-remember-modal>
+    <send-email-modal
+      @emailSent="closeSendEmailModal"
+      :vis="show_send_email"
+      :dataEmail="dataModalSendEmail"
+      @closeModal="closeSendEmailModal"
+      :loading="emailSending"
+      :status="emailStatus"
+    ></send-email-modal>
   </div>
 </template>
 
@@ -242,6 +259,7 @@ import CalcPrice from "@/components/CalcPrice.vue";
 import invoicesService from "@/services/invoices.service";
 import PaymentModal from "@/components/PaymentModal.vue";
 import PaymentRememberModal from "@/components/PaymentRememberModal.vue";
+import SendEmailModal from "@/components/SendEmailModal.vue";
 import StatusPayment from "@/components/StatusPayment.vue";
 import StatusHacienda from "@/components/StatusHacienda.vue";
 import SearchFilter from "@/components/SearchFilter.vue";
@@ -258,12 +276,23 @@ export default {
       loading: false,
       payment_modal_visible: false,
       show_modal_payment_remember: false,
+      show_send_email: false,
+      emailSending: false,
+      emailStatus: '',
       data_modal: {},
       searchData: {},
       currentPage: 1,
       pageCount: 0,
       perPage: 10,
       page: 1,
+      dataModalSendEmail: {
+        email: "",
+        subject: "",
+        body: "",
+        files: [],
+        type: "",
+        document: ""
+      },
       optionsFilter: [
         { label: "Aceptado", value: "aceptado" },
         { label: "Rechazado", value: "rechazado" },
@@ -342,6 +371,7 @@ export default {
     closeModal(data) {
       this.payment_modal_visible = false;
       this.show_modal_payment_remember = false;
+      this.show_send_email = false;
     },
     listAction(command) {
       switch (command.command) {
@@ -392,7 +422,38 @@ export default {
           this.show_modal_payment_remember = true;
           this.data_modal = command.payload;
           break;
+        case "send-email":
+          this.sendEmail(command.payload.item);
+          break;
       }
+    },
+    sendEmail(transaction) {
+      this.show_send_email = true;
+      this.dataModalSendEmail = {
+        email: transaction.client.email,
+        subject: `Factura #${transaction.reference}`,
+        body: `Estimado/a ${transaction.client.name}, adjunto a este correo encontrará la factura #${transaction.reference}.`,
+        files: [],
+        type: 'invoice',
+        document: transaction
+      };
+    },
+    closeSendEmailModal() {
+      this.show_send_email = false;
+    },
+    async sendEmailHandler() {
+      this.emailSending = true;
+      this.emailStatus = 'Conectando con servidor de correo...';
+
+      // Simular una llamada a la API de envío de correo
+      setTimeout(() => {
+        this.emailStatus = 'Enviando tu correo...';
+        setTimeout(() => {
+          this.emailStatus = 'Enviado';
+          this.emailSending = false;
+          this.closeSendEmailModal();
+        }, 2000);
+      }, 2000);
     }
   },
   components: {
@@ -402,7 +463,8 @@ export default {
     StatusHacienda,
     SearchFilter,
     RegistersPerPage,
-    PaymentRememberModal
+    PaymentRememberModal,
+    SendEmailModal
   },
   watch: {
     page(newVal) {
